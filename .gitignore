@@ -1,4 +1,5 @@
 /.idea/workspace.xml
 *.map
+*.js
 .idea/
 .DS_Store

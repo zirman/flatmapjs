@@ -566,125 +566,20 @@ const prog4: StackProgram<Unit> =
 //     .runWithInitialState(linkedListOf(2, 4, 6, 7))
 //     .toString())
 
+// What you learned
+// * Functor. Map interface
+// * Monad. FlatMap interface
+// * Maybe (aka Option). Short-circuiting computations
+// * Either (aka Sum Type, Algebraic Data Types, Tagged Unions, Coproduct).
+//   - Computations with exceptions
+// * LinkedList. Nondeterministic computations and list comprehensions
+// * Recipe (aka StateMonad). Building up stateful computations.
+
+// Other things you can do with flatmap not covered here
+// * Parsing
+// * Interpreters
+
 // Questions?
 
 // Robert Chrzanowski
 // Twitter: @Robert_Chrzanow
-
-// Tokens + flatMap = AST that can be interpreted for side effects
-
-abstract class IO<A> implements IFunctor<A>, IMonad<A> {
-  abstract run(f: (A) => void)
-  map<C>(f: (B) => C): IO<C> {
-    return new IOMap(this, f)
-  }
-  static flatten<A>(io: IO<IO<A>>): IO<A> {
-    return new IOFlatten(io)
-  }
-  flatMap<B>(f: (A) => IO<B>): IO<B> {
-    return IO.flatten(this.map(f))
-  }
-}
-
-class IOMap<A, B> extends IO<B> {
-  readonly io: IO<A>
-  readonly f: (A) => B
-  constructor(io: IO<A>, f: (A) => B) {
-    super()
-    this.io = io
-    this.f = f
-  }
-  run(f: (B) => void) {
-    this.io.run(x => f(this.f(x)))
-  }
-}
-
-class IOFlatten<A> extends IO<A> {
-  readonly ioio: IO<IO<A>>
-  constructor(ioio: IO<IO<A>>) {
-    super()
-    this.ioio = ioio
-  }
-  run(f: (A) => void) {
-    this.ioio.run(x => x.run(f))
-  }
-}
-
-class IOPure<A> extends IO<A> {
-  readonly x: A
-  constructor(x: A) {
-    super()
-    this.x = x
-  }
-  run(f: (A) => void) {
-    f(this.x)
-  }
-}
-
-class IOPrintLn extends IO<Unit> {
-  readonly str: string
-  constructor(str: string) {
-    super()
-    this.str = str
-  }
-  run(f: (A) => void) {
-    console.log(this.str)
-    f(Unit.instance)
-  }
-}
-
-let readLineCallback: (string) => void = () => {
-}
-
-class IOReadLine extends IO<string> {
-  private constructor() {
-    super()
-  }
-  run(f: (string) => void) {
-    readLineCallback = f
-  }
-  static readonly instance = new IOReadLine()
-}
-
-// const startingGuess: Guess = 1..100
-// val guess: (Guess) -> Int = { g -> (g.first + g.last) / 2 }
-//
-// fun guessingGame(s: Guess): IO<Unit> {
-//   val min = s.first
-//   val max = s.last
-//
-//   return if (min == max) {
-//   printlnIO("Your number is $min").flatMap { askIfDone }
-// } else {
-//   val g = guess(s)
-//
-//   printlnIO("Is your number $g? [y/g/l/q]")
-//     .flatMap { readLineIO }
-// .flatMap { a ->
-//     when (a) {
-//     "y" -> askIfDone
-//     "g" -> guessingGame(Math.min(g + 1, max)..max)
-//     "l" -> guessingGame(min..Math.max(g - 1, min))
-//     "q" -> done
-//   else -> printlnIO("Invalid option").flatMap { guessingGame(s) }
-//   }
-//   }
-// }
-// }
-//
-// val askIfDone: IO<Unit> = printlnIO("Do you want to play again? [y/_]")
-//   .flatMap { readLineIO }
-// .flatMap { a2 ->
-//   if (a2 == "y") guessingGame(startingGuess)
-//   else done
-// }
-//
-// val done: IO<Unit> = Unit.toIO()
-//
-// val prog: IO<Unit> = printlnIO("Pick a number between 1 and 100.")
-//   .flatMap { guessingGame(startingGuess) }
-// .flatMap { printlnIO("Play again soon!") }
-//
-// fun main(args: Array<String>) {
-//   //prog.run()
-// }
